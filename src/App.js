@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom';
 import { AuthProvider } from './components/Auth/AuthContext';
 import { ProgressProvider } from './context/ProgressContext';
 import { AuthContext } from './components/Auth/AuthContext';
@@ -49,7 +49,9 @@ const ProtectedRoute = ({ children }) => {
 // Modern Navigation component
 const Navigation = () => {
   const { currentUser, logout } = useContext(AuthContext);
-  const location = window.location.pathname;
+  
+  // Modified for HashRouter compatibility
+  const location = window.location.hash.replace('#', '') || '/';
   
   const handleLogout = async () => {
     try {

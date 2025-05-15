@@ -1223,7 +1223,7 @@ achievementCounter: {
                  `}
                  fill="none"
                  stroke="#ff9d4d"
-                 strokeWidth="0.06"
+                 strokeWidth="0.03"
                  strokeLinecap="round"
                  strokeLinejoin="round"
                />
