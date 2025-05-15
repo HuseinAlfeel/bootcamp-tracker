@@ -28,7 +28,10 @@ export const AuthProvider = ({ children }) => {
           progress: [],
           streak: 0,
           lastUpdated: new Date().toISOString(),
-          joinDate: new Date().toISOString()
+          joinDate: new Date().toISOString(),
+          achievements: [],  // Add this field for achievements
+          studySessions: [], // Add this field for study sessions
+          totalStudyTime: 0  // Add this field for total study time
         });
       } catch (firestoreError) {
         console.error("Error creating user document:", firestoreError);
@@ -92,7 +95,10 @@ export const AuthProvider = ({ children }) => {
               progress: [],
               streak: 0,
               lastUpdated: new Date().toISOString(),
-              joinDate: new Date().toISOString()
+              joinDate: new Date().toISOString(),
+              achievements: [],
+              studySessions: [],
+              totalStudyTime: 0
             });
             
             setCurrentUser({
@@ -100,7 +106,10 @@ export const AuthProvider = ({ children }) => {
               email: user.email,
               name: user.displayName || user.email.split('@')[0],
               progress: [],
-              streak: 0
+              streak: 0,
+              achievements: [],
+              studySessions: [],
+              totalStudyTime: 0
             });
           }
         } catch (error) {

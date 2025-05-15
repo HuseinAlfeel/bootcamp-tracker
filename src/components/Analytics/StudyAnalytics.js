@@ -1,5 +1,3 @@
-// Create a new file: src/components/Analytics/StudyAnalytics.js
-
 import React, { useContext, useState, useEffect } from 'react';
 import { AuthContext } from '../../components/Auth/AuthContext';
 import { ProgressContext } from '../../context/ProgressContext';
@@ -95,22 +93,40 @@ const StudyAnalytics = () => {
       return strongestCategory ? strongestCategory.name : '';
     };
     
-    // Process study time data (placeholder - would use actual study session data)
+    // Process study time data based on completed modules
     const processStudyTimeData = () => {
-      // This would ideally use real study session data from Firebase
-      // For now, we'll create mock data for demonstration
-      const mockDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-      const mockHours = [1.5, 2.0, 0.5, 1.0, 2.5, 3.0, 1.0];
+      // Assuming 1.5 hours per completed module
+      const HOURS_PER_MODULE = 1.5;
       
-      const timeData = mockDays.map((day, index) => ({
-        day,
-        hours: mockHours[index]
-      }));
+      // Create an array for the last 7 days
+      const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+      const result = days.map(day => ({ day, hours: 0 }));
       
-      setStudyTimeData(timeData);
+      // Count completed modules by day over the past week
+      const today = new Date();
+      const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, ...
+      
+      userProgress.forEach(module => {
+        if (module.status === 'completed' && module.updatedAt) {
+          const completedDate = new Date(module.updatedAt);
+          const daysAgo = Math.floor((today - completedDate) / (1000 * 60 * 60 * 24));
+          
+          // Only include if completed within the last 7 days
+          if (daysAgo < 7) {
+            const dayIndex = (dayOfWeek - daysAgo) % 7;
+            const normalizedDayIndex = dayIndex < 0 ? dayIndex + 7 : dayIndex;
+            // Map to the correct array index (Mon=0, Tue=1, ..., Sun=6)
+            const arrayIndex = (normalizedDayIndex + 6) % 7;
+            
+            result[arrayIndex].hours += HOURS_PER_MODULE;
+          }
+        }
+      });
+      
+      setStudyTimeData(result);
       
       // Calculate total study hours
-      const totalHours = mockHours.reduce((sum, hours) => sum + hours, 0);
+      const totalHours = result.reduce((sum, day) => sum + day.hours, 0);
       
       return totalHours;
     };
@@ -140,244 +156,7 @@ const StudyAnalytics = () => {
     calculateStatistics(mostProductiveDay, strongestCategory, totalStudyHours);
   }, [userProgress]);
   
-  // Styles
-  const styles = {
-    container: {
-      backgroundColor: '#2c2c2c',
-      borderRadius: '10px',
-      padding: '20px',
-      boxShadow: '0 4px 10px rgba(0,0,0,0.3)',
-      border: '1px solid #3c3c3c',
-      marginBottom: '30px'
-    },
-    header: {
-      display: 'flex',
-      alignItems: 'center',
-      marginBottom: '20px'
-    },
-    icon: {
-      fontSize: '1.5rem',
-      marginRight: '10px',
-      color: '#4d9aff'
-    },
-    title: {
-      color: '#ffffff',
-      fontSize: '1.25rem',
-      margin: 0
-    },
-    statsGrid: {
-      display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-      gap: '15px',
-      marginBottom: '25px'
-    },
-    statCard: {
-      backgroundColor: 'rgba(60, 60, 60, 0.5)',
-      borderRadius: '8px',
-      padding: '15px',
-      textAlign: 'center'
-    },
-    statValue: {
-      color: '#4d9aff',
-      fontSize: '1.8rem',
-      fontWeight: '600',
-      marginBottom: '5px'
-    },
-    statLabel: {
-      color: '#b3b3b3',
-      fontSize: '0.9rem'
-    },
-    sectionTitle: {
-      color: '#ffffff',
-      fontSize: '1.1rem',
-      marginTop: '25px',
-      marginBottom: '15px',
-      fontWeight: '600'
-    },
-    chartContainer: {
-      height: '300px',
-      backgroundColor: 'rgba(50, 50, 50, 0.5)',
-      borderRadius: '8px',
-      padding: '20px 10px',
-      marginBottom: '25px'
-    },
-    insightBox: {
-      backgroundColor: 'rgba(77, 154, 255, 0.1)',
-      padding: '15px',
-      borderRadius: '8px',
-      margin: '10px 0 20px',
-      borderLeft: '4px solid #4d9aff'
-    },
-    insightText: {
-      color: '#e0e0e0',
-      fontSize: '0.95rem'
-    },
-    highlightText: {
-      color: '#4d9aff',
-      fontWeight: '600'
-    }
-  };
-  
-  // Custom tooltip component for charts
-  const CustomTooltip = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-      return (
-        <div style={{
-          backgroundColor: '#323232',
-          border: '1px solid #4d9aff',
-          borderRadius: '6px',
-          padding: '10px',
-          boxShadow: '0 2px 5px rgba(0,0,0,0.3)'
-        }}>
-          <p style={{ color: '#ffffff', margin: '0 0 5px', fontWeight: '600' }}>{label}</p>
-          {payload.map((entry, index) => (
-            <p key={index} style={{ color: entry.color, margin: '0' }}>
-              {entry.name}: {entry.value} {entry.unit || ''}
-            </p>
-          ))}
-        </div>
-      );
-    }
-    return null;
-  };
-  
-  return (
-    <div style={styles.container}>
-      <div style={styles.header}>
-        <span style={styles.icon}>📊</span>
-        <h3 style={styles.title}>Learning Analytics</h3>
-      </div>
-      
-      {/* Key Statistics */}
-      <div style={styles.statsGrid}>
-        <div style={styles.statCard}>
-          <div style={styles.statValue}>{statistics.totalCompleted}</div>
-          <div style={styles.statLabel}>Modules Completed</div>
-        </div>
-        <div style={styles.statCard}>
-          <div style={styles.statValue}>{statistics.completionRate}%</div>
-          <div style={styles.statLabel}>Overall Completion</div>
-        </div>
-        <div style={styles.statCard}>
-          <div style={styles.statValue}>{statistics.totalStudyHours}</div>
-          <div style={styles.statLabel}>Total Study Hours</div>
-        </div>
-        <div style={styles.statCard}>
-          <div style={styles.statValue}>{statistics.averageTimePerModule}</div>
-          <div style={styles.statLabel}>Hours Per Module</div>
-        </div>
-      </div>
-      
-      {/* Weekly Activity Chart */}
-      <h4 style={styles.sectionTitle}>Weekly Activity Pattern</h4>
-      <div style={styles.insightBox}>
-        <p style={styles.insightText}>
-          Your most productive day is <span style={styles.highlightText}>{statistics.mostProductiveDay}</span>. 
-          Consider scheduling important study sessions on this day to maximize your effectiveness.
-        </p>
-      </div>
-      <div style={styles.chartContainer}>
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart
-            data={weeklyData}
-            margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-          >
-            <CartesianGrid strokeDasharray="3 3" stroke="#3c3c3c" />
-            <XAxis dataKey="day" stroke="#b3b3b3" />
-            <YAxis stroke="#b3b3b3" allowDecimals={false} />
-            <Tooltip content={<CustomTooltip />} />
-            <Legend />
-            <Bar 
-              dataKey="completed" 
-              name="Modules Completed" 
-              fill="#4d9aff" 
-              radius={[4, 4, 0, 0]}
-            />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-      
-      {/* Category Progress Chart */}
-      <h4 style={styles.sectionTitle}>Progress by Category</h4>
-      <div style={styles.insightBox}>
-        <p style={styles.insightText}>
-          Your strongest area is <span style={styles.highlightText}>{statistics.strongestCategory}</span>. 
-          Try balancing your learning by focusing more on categories with lower completion rates.
-        </p>
-      </div>
-      <div style={styles.chartContainer}>
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart
-            data={categoryData}
-            layout="vertical"
-            margin={{ top: 5, right: 30, left: 100, bottom: 5 }}
-          >
-            <CartesianGrid strokeDasharray="3 3" stroke="#3c3c3c" />
-            <XAxis type="number" stroke="#b3b3b3" />
-            <YAxis 
-              dataKey="name" 
-              type="category" 
-              stroke="#b3b3b3" 
-              tick={{ fill: '#b3b3b3' }} 
-              width={100}
-            />
-            <Tooltip content={<CustomTooltip />} />
-            <Legend />
-            <Bar 
-              dataKey="completed" 
-              name="Completed" 
-              stackId="a" 
-              fill="#4dff9d" 
-            />
-            <Bar 
-              dataKey="inProgress" 
-              name="In Progress" 
-              stackId="a" 
-              fill="#ff9d4d" 
-            />
-            <Bar 
-              dataKey="notStarted" 
-              name="Not Started" 
-              stackId="a" 
-              fill="#6b7280" 
-            />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-      
-      {/* Study Time Chart */}
-      <h4 style={styles.sectionTitle}>Daily Study Hours (Last Week)</h4>
-      <div style={styles.insightBox}>
-        <p style={styles.insightText}>
-          You've studied for <span style={styles.highlightText}>{statistics.totalStudyHours} hours</span> in the last week. 
-          Consistent daily practice, even in short sessions, is key to mastering programming skills.
-        </p>
-      </div>
-      <div style={styles.chartContainer}>
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart
-            data={studyTimeData}
-            margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-          >
-            <CartesianGrid strokeDasharray="3 3" stroke="#3c3c3c" />
-            <XAxis dataKey="day" stroke="#b3b3b3" />
-            <YAxis stroke="#b3b3b3" />
-            <Tooltip content={<CustomTooltip />} />
-            <Legend />
-            <Line 
-              type="monotone" 
-              dataKey="hours" 
-              name="Study Hours" 
-              stroke="#ff9d4d" 
-              strokeWidth={2}
-              dot={{ r: 5, fill: '#ff9d4d' }}
-              activeDot={{ r: 6, fill: '#ffffff', stroke: '#ff9d4d' }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
-    </div>
-  );
+  return null; // This component doesn't render anything on its own anymore
 };
 
 export default StudyAnalytics;
